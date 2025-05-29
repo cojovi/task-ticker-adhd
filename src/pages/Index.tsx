@@ -12,10 +12,17 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Ticker */}
+      {/* Main Ticker - First Row */}
       <div className="px-8">
         <div className="max-w-7xl mx-auto">
-          <TickerCarousel />
+          <TickerCarousel direction="left" />
+        </div>
+      </div>
+
+      {/* Second Ticker Row */}
+      <div className="px-8 mt-8">
+        <div className="max-w-7xl mx-auto">
+          <TickerCarousel direction="right" />
         </div>
       </div>
 
@@ -25,7 +32,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="text-2xl font-bold text-white">12</div>
-              <div className="text-slate-300 text-sm">Active Tasks</div>
+              <div className="text-slate-300 text-sm">Work Tasks</div>
             </div>
             <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="text-2xl font-bold text-emerald-400">8</div>

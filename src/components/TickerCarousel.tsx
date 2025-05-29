@@ -69,7 +69,11 @@ const mockTasks = [
   }
 ];
 
-const TickerCarousel: React.FC = () => {
+interface TickerCarouselProps {
+  direction?: 'left' | 'right';
+}
+
+const TickerCarousel: React.FC<TickerCarouselProps> = ({ direction = 'left' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -99,7 +103,9 @@ const TickerCarousel: React.FC = () => {
       const progress = (elapsed % duration) / duration;
       const offset = progress * contentWidth;
       
-      container.style.transform = `translateX(-${offset}px)`;
+      // Apply direction - left scrolls left-to-right, right scrolls right-to-left
+      const translateX = direction === 'left' ? -offset : offset - contentWidth;
+      container.style.transform = `translateX(${translateX}px)`;
       
       animationId = requestAnimationFrame(animate);
     };
@@ -111,7 +117,7 @@ const TickerCarousel: React.FC = () => {
         cancelAnimationFrame(animationId);
       }
     };
-  }, []);
+  }, [direction]);
 
   return (
     <div className="relative overflow-hidden">
