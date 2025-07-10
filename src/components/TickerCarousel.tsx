@@ -1,5 +1,4 @@
-
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import TaskCard from './TaskCard';
 import { TaskData } from '../hooks/useGoogleSheets';
 
@@ -17,49 +16,73 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
   error = null 
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || loading || error || !tasks.length) return;
 
-    // Duplicate the content for seamless looping
+    // Clear any existing animation
+    container.style.transform = 'translateX(0px)';
+    
+    // Remove any existing clones
+    const existingClones = container.querySelectorAll('.ticker-content-clone');
+    existingClones.forEach(clone => clone.remove());
+
     const content = container.querySelector('.ticker-content') as HTMLElement;
     if (!content) return;
 
-    const clone = content.cloneNode(true) as HTMLElement;
-    clone.classList.add('ticker-content-clone');
-    container.appendChild(clone);
+    // Wait for content to render, then start animation
+    const startAnimation = () => {
+      // Create clone for seamless looping
+      const clone = content.cloneNode(true) as HTMLElement;
+      clone.classList.add('ticker-content-clone');
+      clone.classList.remove('ticker-content');
+      container.appendChild(clone);
 
-    // Calculate the width of one set of content
-    const contentWidth = content.scrollWidth;
-    
-    // Set up the animation
-    let animationId: number;
-    let startTime: number;
-    const duration = 60000; // 60 seconds for full cycle
-    
-    const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime;
+      // Calculate the width of one set of content
+      const contentWidth = content.scrollWidth;
       
-      const elapsed = currentTime - startTime;
-      const progress = (elapsed % duration) / duration;
-      const offset = progress * contentWidth;
+      if (contentWidth === 0) return; // Content not ready yet
+
+      // Set up the animation
+      let animationId: number;
+      let startTime: number;
+      const duration = Math.max(30000, contentWidth * 50); // Adjust speed based on content
       
-      // Apply direction - left scrolls left-to-right, right scrolls right-to-left
-      const translateX = direction === 'left' ? -offset : offset - contentWidth;
-      container.style.transform = `translateX(${translateX}px)`;
+      const animate = (currentTime: number) => {
+        if (!startTime) startTime = currentTime;
+        
+        const elapsed = currentTime - startTime;
+        const progress = (elapsed % duration) / duration;
+        const offset = progress * contentWidth;
+        
+        // Apply direction - left scrolls left-to-right, right scrolls right-to-left
+        const translateX = direction === 'left' ? -offset : offset - contentWidth;
+        container.style.transform = `translateX(${translateX}px)`;
+        
+        animationId = requestAnimationFrame(animate);
+      };
       
+      setIsAnimating(true);
       animationId = requestAnimationFrame(animate);
+
+      return () => {
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+        }
+        setIsAnimating(false);
+      };
     };
-    
-    animationId = requestAnimationFrame(animate);
+
+    // Small delay to ensure content is rendered
+    const timeoutId = setTimeout(startAnimation, 100);
 
     return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
+      clearTimeout(timeoutId);
+      setIsAnimating(false);
     };
-  }, [direction]);
+  }, [direction, tasks, loading, error]);
 
   if (loading) {
     return (
@@ -98,15 +121,20 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
       <div className="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none"></div>
       
       {/* Ticker container */}
-      <div 
-        ref={containerRef}
-        className="flex items-center py-8"
-        style={{ willChange: 'transform' }}
-      >
-        <div className="ticker-content flex">
-          {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
-          ))}
+      <div className="relative overflow-hidden">
+        <div 
+          ref={containerRef}
+          className="flex items-center py-8 ticker-container"
+          style={{ 
+            willChange: 'transform',
+            transition: isAnimating ? 'none' : 'transform 0.3s ease'
+          }}
+        >
+          <div className="ticker-content flex">
+            {tasks.map((task) => (
+              <TaskCard key={task.id} task={task} />
+            ))}
+          </div>
         </div>
       </div>
       
