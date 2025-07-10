@@ -1,4 +1,3 @@
-
 import TickerCarousel from '../components/TickerCarousel';
 import { useGoogleSheets } from '../hooks/useGoogleSheets';
 import { Button } from '../components/ui/button';
