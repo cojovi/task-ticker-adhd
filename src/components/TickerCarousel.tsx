@@ -1,79 +1,21 @@
 
 import React, { useEffect, useRef } from 'react';
 import TaskCard from './TaskCard';
-
-const mockTasks = [
-  {
-    id: 1,
-    title: "Design Homepage UI Mockups",
-    status: "In Progress",
-    priority: "High",
-    dueDate: "2025-06-01",
-    tags: ["Design", "Frontend", "UI/UX"]
-  },
-  {
-    id: 2,
-    title: "Implement Authentication API",
-    status: "Completed",
-    priority: "High",
-    dueDate: "2025-05-28",
-    tags: ["Backend", "Security", "API"]
-  },
-  {
-    id: 3,
-    title: "Write Project Documentation",
-    status: "Not Started",
-    priority: "Medium",
-    dueDate: "2025-06-10",
-    tags: ["Documentation", "Planning"]
-  },
-  {
-    id: 4,
-    title: "Database Schema Optimization",
-    status: "In Progress",
-    priority: "Medium",
-    dueDate: "2025-06-05",
-    tags: ["Database", "Performance", "Backend"]
-  },
-  {
-    id: 5,
-    title: "Mobile App Wireframes",
-    status: "Completed",
-    priority: "Low",
-    dueDate: "2025-05-25",
-    tags: ["Mobile", "Design", "Wireframes"]
-  },
-  {
-    id: 6,
-    title: "Performance Testing Suite",
-    status: "Not Started",
-    priority: "High",
-    dueDate: "2025-05-30",
-    tags: ["Testing", "Performance", "QA"]
-  },
-  {
-    id: 7,
-    title: "Customer Feedback Analysis",
-    status: "In Progress",
-    priority: "Medium",
-    dueDate: "2025-06-08",
-    tags: ["Research", "Analytics", "Customer"]
-  },
-  {
-    id: 8,
-    title: "Deploy Staging Environment",
-    status: "Completed",
-    priority: "High",
-    dueDate: "2025-05-27",
-    tags: ["DevOps", "Deployment", "Infrastructure"]
-  }
-];
+import { TaskData } from '../hooks/useGoogleSheets';
 
 interface TickerCarouselProps {
   direction?: 'left' | 'right';
+  tasks: TaskData[];
+  loading?: boolean;
+  error?: string | null;
 }
 
-const TickerCarousel: React.FC<TickerCarouselProps> = ({ direction = 'left' }) => {
+const TickerCarousel: React.FC<TickerCarouselProps> = ({ 
+  direction = 'left', 
+  tasks, 
+  loading = false, 
+  error = null 
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -119,6 +61,36 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({ direction = 'left' }) =
     };
   }, [direction]);
 
+  if (loading) {
+    return (
+      <div className="relative overflow-hidden">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-white/60">Loading tasks...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="relative overflow-hidden">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-red-400">Error: {error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!tasks.length) {
+    return (
+      <div className="relative overflow-hidden">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-white/60">No tasks found</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative overflow-hidden">
       {/* Gradient overlays for fade effect */}
@@ -132,7 +104,7 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({ direction = 'left' }) =
         style={{ willChange: 'transform' }}
       >
         <div className="ticker-content flex">
-          {mockTasks.map((task) => (
+          {tasks.map((task) => (
             <TaskCard key={task.id} task={task} />
           ))}
         </div>

@@ -1,16 +1,10 @@
 
 import React from 'react';
 import { Calendar, Clock, Flag } from 'lucide-react';
+import { TaskData } from '../hooks/useGoogleSheets';
 
 interface TaskCardProps {
-  task: {
-    id: number;
-    title: string;
-    status: string;
-    priority: string;
-    dueDate: string;
-    tags: string[];
-  };
+  task: TaskData;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
@@ -30,23 +24,33 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'completed':
+      case 'complete':
       case 'done':
         return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
       case 'in progress':
+      case 'in-progress':
         return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
       case 'not started':
+      case 'not-started':
         return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
+      case 'blocked':
+        return 'bg-red-500/20 text-red-300 border-red-500/30';
       default:
         return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
     }
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'No date set';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; // Return original if not a valid date
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   const isOverdue = (dateString: string) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return false;
     return new Date(dateString) < new Date() && task.status.toLowerCase() !== 'completed';
   };
 
@@ -79,19 +83,19 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
         </span>
       </div>
 
-      {/* Tags */}
+      {/* Owner and Notes */}
       <div className="flex flex-wrap gap-2">
-        {task.tags.slice(0, 3).map((tag, index) => (
-          <span
-            key={index}
-            className="px-2 py-1 bg-slate-700/50 text-slate-300 text-xs rounded-md border border-slate-600/50"
-          >
-            {tag}
+        {task.owner && (
+          <span className="px-2 py-1 bg-slate-700/50 text-slate-300 text-xs rounded-md border border-slate-600/50">
+            {task.owner}
           </span>
-        ))}
-        {task.tags.length > 3 && (
-          <span className="px-2 py-1 bg-slate-700/50 text-slate-400 text-xs rounded-md border border-slate-600/50">
-            +{task.tags.length - 3}
+        )}
+        {task.notes && (
+          <span 
+            className="px-2 py-1 bg-slate-700/50 text-slate-400 text-xs rounded-md border border-slate-600/50 truncate max-w-32"
+            title={task.notes}
+          >
+            {task.notes}
           </span>
         )}
       </div>

@@ -6,6 +6,35 @@
 
 ## How can I edit this code?
 
+## Google Sheets Setup
+
+This project integrates with Google Sheets to fetch task data. To set this up:
+
+1. **Create a Google Sheets API Key:**
+   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the Google Sheets API
+   - Create credentials (API Key)
+   - Restrict the API key to Google Sheets API only
+
+2. **Prepare your Google Sheet:**
+   - Create a Google Sheet with two sheets named "Work" and "Life"
+   - Set up columns: Task, Priority, Owner, Status, Start date, Notes
+   - Make sure the sheet is publicly viewable (or configure service account access)
+
+3. **Configure Environment Variables:**
+   - Copy `.env.example` to `.env`
+   - Fill in your Google Sheets API key and Sheet ID
+   - The Sheet ID is found in the URL: `https://docs.google.com/spreadsheets/d/SHEET_ID/edit`
+
+4. **Column Structure:**
+   - Column A: Task name
+   - Column B: Priority (Low, Medium, High, Code Red)
+   - Column C: Owner/Assignee
+   - Column D: Status (Not started, In progress, Completed, Blocked)
+   - Column E: Start/Due date
+   - Column F: Notes
+
 There are several ways of editing your application.
 
 **Use Lovable**
