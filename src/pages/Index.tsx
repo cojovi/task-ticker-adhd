@@ -6,6 +6,12 @@ import { RefreshCw } from 'lucide-react';
 const Index = () => {
   const { workTasks, lifeTasks, loading, error, refetch } = useGoogleSheets();
 
+  // Debug logging
+  console.log('Work tasks:', workTasks);
+  console.log('Life tasks:', lifeTasks);
+  console.log('Loading:', loading);
+  console.log('Error:', error);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
@@ -30,10 +36,11 @@ const Index = () => {
       </div>
 
       {/* Work Tasks Ticker - First Row */}
-      <div className="px-8">
+      <div className="px-8 mb-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-white mb-2">Work Tasks</h2>
+            <p className="text-sm text-slate-400">Count: {workTasks.length}</p>
           </div>
           <TickerCarousel 
             direction="left" 
@@ -45,10 +52,16 @@ const Index = () => {
       </div>
 
       {/* Life Tasks Ticker - Second Row */}
-      <div className="px-8 mt-8">
+      <div className="px-8 mb-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-white mb-2">Life Tasks</h2>
+            <p className="text-sm text-slate-400">Count: {lifeTasks.length}</p>
+          </div>
+          <div className="bg-red-500/20 border border-red-500 p-4 rounded mb-4">
+            <p className="text-white">DEBUG: Life Tasks Length: {lifeTasks.length}</p>
+            <p className="text-white">DEBUG: Loading: {loading.toString()}</p>
+            <p className="text-white">DEBUG: Error: {error || 'none'}</p>
           </div>
           <TickerCarousel 
             direction="right" 
