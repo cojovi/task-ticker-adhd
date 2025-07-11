@@ -20,62 +20,78 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || loading || error || !tasks.length) return;
+    if (!container || loading || error || !tasks.length) {
+      setIsAnimating(false);
+      return;
+    }
 
-    // Clear any existing animation
+    console.log(`Starting animation for ${tasks.length} tasks in direction ${direction}`);
+
+    // Reset any existing animation
+    setIsAnimating(false);
     container.style.transform = 'translateX(0px)';
     
     // Remove any existing clones
     const existingClones = container.querySelectorAll('.ticker-content-clone');
     existingClones.forEach(clone => clone.remove());
 
-    const content = container.querySelector('.ticker-content') as HTMLElement;
-    if (!content) return;
-
-    // Wait for content to render, then start animation
     const startAnimation = () => {
-      // Create clone for seamless looping
-      const clone = content.cloneNode(true) as HTMLElement;
-      clone.classList.add('ticker-content-clone');
-      clone.classList.remove('ticker-content');
-      container.appendChild(clone);
+      const content = container.querySelector('.ticker-content') as HTMLElement;
+      if (!content) {
+        console.log('No content found, retrying...');
+        setTimeout(startAnimation, 100);
+        return;
+      }
 
-      // Calculate the width of one set of content
-      const contentWidth = content.scrollWidth;
-      
-      if (contentWidth === 0) return; // Content not ready yet
-
-      // Set up the animation
-      let animationId: number;
-      let startTime: number;
-      const duration = Math.max(30000, contentWidth * 50); // Adjust speed based on content
-      
-      const animate = (currentTime: number) => {
-        if (!startTime) startTime = currentTime;
+      // Wait for content to render
+      setTimeout(() => {
+        const contentWidth = content.scrollWidth;
+        console.log(`Content width: ${contentWidth}px`);
         
-        const elapsed = currentTime - startTime;
-        const progress = (elapsed % duration) / duration;
-        const offset = progress * contentWidth;
-        
-        // Apply direction - left scrolls left-to-right, right scrolls right-to-left
-        const translateX = direction === 'left' ? -offset : offset - contentWidth;
-        container.style.transform = `translateX(${translateX}px)`;
-        
-        animationId = requestAnimationFrame(animate);
-      };
-      
-      setIsAnimating(true);
-      animationId = requestAnimationFrame(animate);
-
-      return () => {
-        if (animationId) {
-          cancelAnimationFrame(animationId);
+        if (contentWidth === 0) {
+          console.log('Content width is 0, retrying...');
+          setTimeout(startAnimation, 100);
+          return;
         }
-        setIsAnimating(false);
-      };
+
+        // Create clone for seamless looping
+        const clone = content.cloneNode(true) as HTMLElement;
+        clone.classList.add('ticker-content-clone');
+        clone.classList.remove('ticker-content');
+        container.appendChild(clone);
+
+        // Set up the animation
+        let animationId: number;
+        let startTime: number;
+        const duration = Math.max(30000, contentWidth * 50); // Adjust speed based on content
+        
+        const animate = (currentTime: number) => {
+          if (!startTime) startTime = currentTime;
+          
+          const elapsed = currentTime - startTime;
+          const progress = (elapsed % duration) / duration;
+          const offset = progress * contentWidth;
+          
+          // Apply direction - left scrolls left-to-right, right scrolls right-to-left
+          const translateX = direction === 'left' ? -offset : offset - contentWidth;
+          container.style.transform = `translateX(${translateX}px)`;
+          
+          animationId = requestAnimationFrame(animate);
+        };
+        
+        setIsAnimating(true);
+        animationId = requestAnimationFrame(animate);
+        console.log('Animation started');
+
+        return () => {
+          if (animationId) {
+            cancelAnimationFrame(animationId);
+          }
+          setIsAnimating(false);
+        };
+      }, 200); // Increased delay to ensure rendering
     };
 
-    // Small delay to ensure content is rendered
     const timeoutId = setTimeout(startAnimation, 100);
 
     return () => {
@@ -83,6 +99,8 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
       setIsAnimating(false);
     };
   }, [direction, tasks, loading, error]);
+
+  console.log(`TickerCarousel render: ${tasks.length} tasks, loading: ${loading}, error: ${error}`);
 
   if (loading) {
     return (
@@ -116,6 +134,12 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
 
   return (
     <div className="relative overflow-hidden">
+      {/* Debug info */}
+      <div className="bg-yellow-500/20 border border-yellow-500 p-2 rounded mb-4 text-xs">
+        <p className="text-white">DEBUG TICKER: {tasks.length} tasks, direction: {direction}</p>
+        <p className="text-white">Tasks: {tasks.map(t => t.title).join(', ')}</p>
+      </div>
+      
       {/* Gradient overlays for fade effect */}
       <div className="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-slate-900 to-transparent z-10 pointer-events-none"></div>
       <div className="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none"></div>
@@ -131,8 +155,8 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
           }}
         >
           <div className="ticker-content flex">
-            {tasks.map((task) => (
-              <TaskCard key={task.id} task={task} />
+            {tasks.map((task, index) => (
+              <TaskCard key={`${task.id}-${index}`} task={task} />
             ))}
           </div>
         </div>
