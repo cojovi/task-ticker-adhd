@@ -25,8 +25,6 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
       return;
     }
 
-    console.log(`Starting animation for ${tasks.length} tasks in direction ${direction}`);
-
     // Reset any existing animation
     setIsAnimating(false);
     container.style.transform = 'translateX(0px)';
@@ -38,7 +36,6 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
     const startAnimation = () => {
       const content = container.querySelector('.ticker-content') as HTMLElement;
       if (!content) {
-        console.log('No content found, retrying...');
         setTimeout(startAnimation, 100);
         return;
       }
@@ -46,10 +43,8 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
       // Wait for content to render
       setTimeout(() => {
         const contentWidth = content.scrollWidth;
-        console.log(`Content width: ${contentWidth}px`);
         
         if (contentWidth === 0) {
-          console.log('Content width is 0, retrying...');
           setTimeout(startAnimation, 100);
           return;
         }
@@ -63,7 +58,7 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
         // Set up the animation
         let animationId: number;
         let startTime: number;
-        const duration = Math.max(30000, contentWidth * 50); // Adjust speed based on content
+        const duration = Math.max(30000, contentWidth * 50);
         
         const animate = (currentTime: number) => {
           if (!startTime) startTime = currentTime;
@@ -72,7 +67,6 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
           const progress = (elapsed % duration) / duration;
           const offset = progress * contentWidth;
           
-          // Apply direction - left scrolls left-to-right, right scrolls right-to-left
           const translateX = direction === 'left' ? -offset : offset - contentWidth;
           container.style.transform = `translateX(${translateX}px)`;
           
@@ -81,7 +75,6 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
         
         setIsAnimating(true);
         animationId = requestAnimationFrame(animate);
-        console.log('Animation started');
 
         return () => {
           if (animationId) {

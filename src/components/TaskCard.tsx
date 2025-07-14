@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Calendar, Clock, Flag } from 'lucide-react';
 import { TaskData } from '../hooks/useGoogleSheets';
@@ -16,6 +15,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
         return 'border-orange-400 bg-orange-500/10 text-orange-300';
       case 'low':
         return 'border-green-400 bg-green-500/10 text-green-300';
+      case 'code red':
+        return 'border-red-600 bg-red-600/20 text-red-200';
       default:
         return 'border-slate-400 bg-slate-500/10 text-slate-300';
     }
@@ -43,7 +44,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const formatDate = (dateString: string) => {
     if (!dateString) return 'No date set';
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString; // Return original if not a valid date
+    if (isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
