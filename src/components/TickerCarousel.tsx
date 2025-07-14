@@ -89,7 +89,7 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
           }
           setIsAnimating(false);
         };
-      }, 200); // Increased delay to ensure rendering
+      }, 200);
     };
 
     const timeoutId = setTimeout(startAnimation, 100);
@@ -99,8 +99,6 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
       setIsAnimating(false);
     };
   }, [direction, tasks, loading, error]);
-
-  console.log(`TickerCarousel render: ${tasks.length} tasks, loading: ${loading}, error: ${error}`);
 
   if (loading) {
     return (
@@ -134,12 +132,6 @@ const TickerCarousel: React.FC<TickerCarouselProps> = ({
 
   return (
     <div className="relative overflow-hidden">
-      {/* Debug info */}
-      <div className="bg-yellow-500/20 border border-yellow-500 p-2 rounded mb-4 text-xs">
-        <p className="text-white">DEBUG TICKER: {tasks.length} tasks, direction: {direction}</p>
-        <p className="text-white">Tasks: {tasks.map(t => t.title).join(', ')}</p>
-      </div>
-      
       {/* Gradient overlays for fade effect */}
       <div className="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-slate-900 to-transparent z-10 pointer-events-none"></div>
       <div className="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none"></div>
