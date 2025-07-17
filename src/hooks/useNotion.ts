@@ -146,8 +146,10 @@ export const useNotion = (): UseNotionReturn => {
     } catch (err) {
       console.error('Error fetching Notion data:', err);
       
-      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-        setError('CORS Error: Cannot connect to Notion API directly from browser. You need to set up a backend proxy server or use a different approach. This is a browser security limitation.');
+      if (err instanceof TypeError && (err.message.includes('Failed to fetch') || err.message.includes('CORS') || err.message.includes('Network request failed'))) {
+        const corsError = 'CORS Error: Cannot connect to Notion API directly from browser. You need to set up a backend proxy server or use a different approach. This is a browser security limitation.';
+        setError(corsError);
+        console.log('CORS error detected, fallback should be triggered');
       } else {
         setError(err instanceof Error ? err.message : 'An error occurred while fetching data');
       }
