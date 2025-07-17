@@ -23,7 +23,7 @@ export const useNotionWithFallback = (): UseNotionWithFallbackReturn => {
   }, [error]);
 
   // If using mock data, return mock data instead
-  if (usingMockData) {
+    if (error === 'CORS_ERROR' || (error && error.includes('CORS'))) {
     return {
       workTasks: mockWorkTasks,
       lifeTasks: mockLifeTasks,

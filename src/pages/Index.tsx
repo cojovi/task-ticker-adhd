@@ -68,7 +68,7 @@ const Index = () => {
       )}
 
       {/* API Error State */}
-      {error && !usingMockData && (
+      {error && error !== 'CORS_ERROR' && !usingMockData && (
         <div className="px-8 mb-8">
           <div className="max-w-7xl mx-auto">
             <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-6 text-center">

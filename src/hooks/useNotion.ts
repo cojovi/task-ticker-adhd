@@ -64,8 +64,8 @@ export const useNotion = (): UseNotionReturn => {
           }),
         });
       } catch (fetchError) {
-        console.error('Fetch failed:', fetchError);
-        throw new Error('CORS Error: Cannot connect to Notion API directly from browser. You need to set up a backend proxy server or use a different approach. This is a browser security limitation.');
+        console.log('Direct Notion API call failed due to CORS - this is expected in browser environments');
+        throw new Error('CORS_ERROR');
       }
 
       console.log('Response status:', response.status);
@@ -152,12 +152,17 @@ export const useNotion = (): UseNotionReturn => {
     } catch (err) {
       console.error('Error fetching Notion data:', err);
       
-      if (err instanceof TypeError && (err.message.includes('Failed to fetch') || err.message.includes('CORS') || err.message.includes('Network request failed'))) {
-        const corsError = 'CORS Error: Cannot connect to Notion API directly from browser. You need to set up a backend proxy server or use a different approach. This is a browser security limitation.';
-        setError(corsError);
-        console.log('CORS error detected, fallback should be triggered');
+      if (err instanceof Error && (
+        err.message === 'CORS_ERROR' ||
+        err.message.includes('Failed to fetch') ||
+        err.message.includes('CORS') ||
+        err.message.includes('Network request failed') ||
+        err instanceof TypeError
+      )) {
+        setError('CORS_ERROR');
+        console.log('CORS error detected - fallback mechanism should activate');
       } else {
-        setError(err instanceof Error ? err.message : 'An error occurred while fetching data');
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
       }
     } finally {
       setLoading(false);
