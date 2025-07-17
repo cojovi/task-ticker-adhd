@@ -4,29 +4,41 @@
 
 **URL**: https://lovable.dev/projects/4a02b0b8-d69a-4624-bed1-c2b10adf1f5e
 
-## How can I edit this code?
-
 ## Notion Integration Setup
 
-This project integrates with Notion to fetch task data. To set this up:
+This project integrates with Notion to fetch task data. **Important**: Due to CORS restrictions, the Notion API cannot be called directly from the browser in production.
 
-1. **Create a Notion Integration:**
-   - Go to [Notion Integrations](https://www.notion.so/my-integrations)
-   - Create a new integration for your workspace
-   - Copy the "Internal Integration Token"
+## Development vs Production
 
-2. **Share your Database with the Integration:**
-   - Open your Notion database
-   - Click the "Share" button in the top right
-   - Find your integration in the list and give it access
+### Development Mode (Current)
+- Uses mock data when Notion API fails due to CORS
+- Shows sample tasks for development and testing
+- Allows you to see the interface working correctly
 
-3. **Configure Environment Variables:**
-   - Copy `.env.example` to `.env`
-   - Fill in your Notion integration token
-   - The database ID is already configured in the code
+### Production Setup Required
+To use real Notion data in production, you need one of these approaches:
 
-4. **Database Structure:**
-   The application expects your Notion database to have these properties:
+1. **Backend Proxy Server**
+   - Create a Node.js/Express server that calls Notion API
+   - Deploy it separately and have your frontend call your backend
+
+2. **Serverless Functions**
+   - Use Vercel Functions, Netlify Functions, or AWS Lambda
+   - Create an API endpoint that handles Notion calls
+
+3. **Next.js API Routes**
+   - Convert to Next.js project for built-in API routes
+   - Handle Notion API calls server-side
+
+## Current Setup (Development)
+
+1. **Environment Variables:**
+   ```
+   VITE_NOTION_TOKEN=your_notion_token_here
+   ```
+
+2. **Database Structure:**
+   Your Notion database should have these properties:
    - **Task** or **Name** (Title) - The task name
    - **Priority** (Select) - Options: Low, Medium, High, Code Red
    - **Owner** or **Assignee** (Rich Text) - Person responsible
@@ -35,75 +47,65 @@ This project integrates with Notion to fetch task data. To set this up:
    - **Notes** (Rich Text) - Additional information
    - **Category** or **Type** (Select) - Options: Work, Life, Personal (optional)
 
-5. **How it works:**
-   - The app fetches all tasks from your Notion database
-   - Tasks are automatically split into Work and Life categories
-   - If no category is specified, tasks are divided evenly
-   - The ticker displays tasks in real-time with smooth scrolling
+3. **Sharing Database:**
+   - Go to your Notion database
+   - Click "Share" → "Manage access"
+   - Add your integration and give it access
 
-There are several ways of editing your application.
+## Example Backend Proxy (Node.js/Express)
 
-**Use Lovable**
+```javascript
+const express = require('express');
+const cors = require('cors');
+const { Client } = require('@notionhq/client');
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4a02b0b8-d69a-4624-bed1-c2b10adf1f5e) and start prompting.
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-Changes made via Lovable will be committed automatically to this repo.
+const notion = new Client({
+  auth: process.env.NOTION_TOKEN,
+});
 
-**Use your preferred IDE**
+app.get('/api/tasks', async (req, res) => {
+  try {
+    const response = await notion.databases.query({
+      database_id: process.env.NOTION_DATABASE_ID,
+    });
+    res.json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+app.listen(3001, () => {
+  console.log('Proxy server running on port 3001');
+});
 ```
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
+## Technologies Used
 
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
-- Notion API
+- Notion API (with CORS limitations)
 
-## How can I deploy this project?
+## How to Run
 
-Simply open [Lovable](https://lovable.dev/projects/4a02b0b8-d69a-4624-bed1-c2b10adf1f5e) and click on Share -> Publish.
+```sh
+npm install
+npm run dev
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Deployment
 
-Yes, you can!
+For production deployment with real Notion data:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Set up a backend proxy server
+2. Update the API calls to use your proxy instead of direct Notion API
+3. Deploy both frontend and backend
+4. Configure CORS properly
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Currently, the app will work in development mode with mock data to demonstrate the interface and functionality.

@@ -8,7 +8,7 @@ export interface TaskData {
   status: string;
   dueDate: string;
   notes: string;
-  category?: string; // To distinguish between Work and Life tasks
+  category?: string;
 }
 
 interface UseNotionReturn {
@@ -38,8 +38,12 @@ export const useNotion = (): UseNotionReturn => {
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('Fetching from Notion API...');
+      console.log('Database ID:', databaseId);
+      console.log('Token exists:', !!notionToken);
 
-      // Query the Notion database
+      // Try to make the API call with proper headers and error handling
       const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
         method: 'POST',
         headers: {
@@ -58,31 +62,66 @@ export const useNotion = (): UseNotionReturn => {
         }),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error(`Notion API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        
+        if (response.status === 401) {
+          throw new Error('Invalid Notion token - please check your credentials');
+        } else if (response.status === 404) {
+          throw new Error('Database not found - please check the database ID');
+        } else if (response.status === 403) {
+          throw new Error('Permission denied - please share the database with your integration');
+        } else {
+          throw new Error(`Notion API error: ${response.status} - ${errorText}`);
+        }
       }
 
       const data = await response.json();
+      console.log('Notion API response:', data);
       
+      if (!data.results || !Array.isArray(data.results)) {
+        throw new Error('Invalid response format from Notion API');
+      }
+
       // Transform Notion data to our TaskData format
       const transformedTasks: TaskData[] = data.results
         .filter((page: any) => page.properties)
         .map((page: any) => {
           const props = page.properties;
+          console.log('Processing page properties:', props);
           
           return {
             id: page.id,
-            title: props.Task?.title?.[0]?.plain_text || props.Name?.title?.[0]?.plain_text || 'Untitled Task',
+            title: props.Task?.title?.[0]?.plain_text || 
+                   props.Name?.title?.[0]?.plain_text || 
+                   props.Title?.title?.[0]?.plain_text || 
+                   'Untitled Task',
             priority: props.Priority?.select?.name || 'Low',
-            owner: props.Owner?.rich_text?.[0]?.plain_text || props.Assignee?.rich_text?.[0]?.plain_text || '',
+            owner: props.Owner?.rich_text?.[0]?.plain_text || 
+                   props.Assignee?.rich_text?.[0]?.plain_text || 
+                   props.Person?.rich_text?.[0]?.plain_text || 
+                   'Unassigned',
             status: props.Status?.select?.name || 'Not started',
-            dueDate: props['Due Date']?.date?.start || props['Start Date']?.date?.start || '',
-            notes: props.Notes?.rich_text?.[0]?.plain_text || '',
-            category: props.Category?.select?.name || props.Type?.select?.name || 'Work'
+            dueDate: props['Due Date']?.date?.start || 
+                     props['Start Date']?.date?.start || 
+                     props.Date?.date?.start || 
+                     '',
+            notes: props.Notes?.rich_text?.[0]?.plain_text || 
+                   props.Description?.rich_text?.[0]?.plain_text || 
+                   '',
+            category: props.Category?.select?.name || 
+                     props.Type?.select?.name || 
+                     'Work'
           };
         });
 
-      // Separate tasks by category (Work vs Life)
+      console.log('Transformed tasks:', transformedTasks);
+
+      // Separate tasks by category
       const workTasksData = transformedTasks.filter(task => 
         task.category === 'Work' || task.category === 'work' || !task.category
       );
@@ -91,7 +130,7 @@ export const useNotion = (): UseNotionReturn => {
         task.category === 'Life' || task.category === 'life' || task.category === 'Personal'
       );
 
-      // If no category distinction exists, split tasks evenly or use priority
+      // If no category distinction exists, split tasks evenly
       if (workTasksData.length === 0 && lifeTasksData.length === 0) {
         const midpoint = Math.ceil(transformedTasks.length / 2);
         setWorkTasks(transformedTasks.slice(0, midpoint));
@@ -101,9 +140,17 @@ export const useNotion = (): UseNotionReturn => {
         setLifeTasks(lifeTasksData);
       }
 
+      console.log('Work tasks set:', workTasksData.length);
+      console.log('Life tasks set:', lifeTasksData.length);
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while fetching data');
       console.error('Error fetching Notion data:', err);
+      
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        setError('CORS Error: Cannot connect to Notion API directly from browser. You need to set up a backend proxy server or use a different approach. This is a browser security limitation.');
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching data');
+      }
     } finally {
       setLoading(false);
     }
