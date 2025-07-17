@@ -150,7 +150,6 @@ export const useNotion = (): UseNotionReturn => {
       console.log('Life tasks set:', lifeTasksData.length);
 
     } catch (err) {
-      console.error('Error fetching Notion data:', err);
       
       if (err instanceof Error && (
         err.message === 'CORS_ERROR' ||
@@ -159,9 +158,11 @@ export const useNotion = (): UseNotionReturn => {
         err.message.includes('Network request failed') ||
         err instanceof TypeError
       )) {
+        console.warn('CORS limitation detected - using fallback data:', err.message);
         setError('CORS_ERROR');
         console.log('CORS error detected - fallback mechanism should activate');
       } else {
+        console.error('Error fetching Notion data:', err);
         setError(err instanceof Error ? err.message : 'Unknown error occurred');
       }
     } finally {
