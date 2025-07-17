@@ -44,23 +44,29 @@ export const useNotion = (): UseNotionReturn => {
       console.log('Token exists:', !!notionToken);
 
       // Try to make the API call with proper headers and error handling
-      const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${notionToken}`,
-          'Content-Type': 'application/json',
-          'Notion-Version': '2022-06-28',
-        },
-        body: JSON.stringify({
-          page_size: 100,
-          sorts: [
-            {
-              property: 'Priority',
-              direction: 'descending'
-            }
-          ]
-        }),
-      });
+      let response;
+      try {
+        response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${notionToken}`,
+            'Content-Type': 'application/json',
+            'Notion-Version': '2022-06-28',
+          },
+          body: JSON.stringify({
+            page_size: 100,
+            sorts: [
+              {
+                property: 'Priority',
+                direction: 'descending'
+              }
+            ]
+          }),
+        });
+      } catch (fetchError) {
+        console.error('Fetch failed:', fetchError);
+        throw new Error('CORS Error: Cannot connect to Notion API directly from browser. You need to set up a backend proxy server or use a different approach. This is a browser security limitation.');
+      }
 
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
