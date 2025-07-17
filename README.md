@@ -6,34 +6,40 @@
 
 ## How can I edit this code?
 
-## Google Sheets Setup
+## Notion Integration Setup
 
-This project integrates with Google Sheets to fetch task data. To set this up:
+This project integrates with Notion to fetch task data. To set this up:
 
-1. **Create a Google Sheets API Key:**
-   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select an existing one
-   - Enable the Google Sheets API
-   - Create credentials (API Key)
-   - Restrict the API key to Google Sheets API only
+1. **Create a Notion Integration:**
+   - Go to [Notion Integrations](https://www.notion.so/my-integrations)
+   - Create a new integration for your workspace
+   - Copy the "Internal Integration Token"
 
-2. **Prepare your Google Sheet:**
-   - Create a Google Sheet with two sheets named "Work" and "Life"
-   - Set up columns: Task, Priority, Owner, Status, Start date, Notes
-   - Make sure the sheet is publicly viewable (or configure service account access)
+2. **Share your Database with the Integration:**
+   - Open your Notion database
+   - Click the "Share" button in the top right
+   - Find your integration in the list and give it access
 
 3. **Configure Environment Variables:**
    - Copy `.env.example` to `.env`
-   - Fill in your Google Sheets API key and Sheet ID
-   - The Sheet ID is found in the URL: `https://docs.google.com/spreadsheets/d/SHEET_ID/edit`
+   - Fill in your Notion integration token
+   - The database ID is already configured in the code
 
-4. **Column Structure:**
-   - Column A: Task name
-   - Column B: Priority (Low, Medium, High, Code Red)
-   - Column C: Owner/Assignee
-   - Column D: Status (Not started, In progress, Completed, Blocked)
-   - Column E: Start/Due date
-   - Column F: Notes
+4. **Database Structure:**
+   The application expects your Notion database to have these properties:
+   - **Task** or **Name** (Title) - The task name
+   - **Priority** (Select) - Options: Low, Medium, High, Code Red
+   - **Owner** or **Assignee** (Rich Text) - Person responsible
+   - **Status** (Select) - Options: Not started, In progress, Completed, Blocked
+   - **Due Date** or **Start Date** (Date) - When the task is due
+   - **Notes** (Rich Text) - Additional information
+   - **Category** or **Type** (Select) - Options: Work, Life, Personal (optional)
+
+5. **How it works:**
+   - The app fetches all tasks from your Notion database
+   - Tasks are automatically split into Work and Life categories
+   - If no category is specified, tasks are divided evenly
+   - The ticker displays tasks in real-time with smooth scrolling
 
 There are several ways of editing your application.
 
@@ -88,6 +94,7 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Notion API
 
 ## How can I deploy this project?
 

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Calendar, Clock, Flag } from 'lucide-react';
-import { TaskData } from '../hooks/useGoogleSheets';
+import { Calendar, Flag, User } from 'lucide-react';
+import { TaskData } from '../hooks/useNotion';
 
 interface TaskCardProps {
   task: TaskData;
@@ -16,6 +16,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       case 'low':
         return 'border-green-400 bg-green-500/10 text-green-300';
       case 'code red':
+      case 'urgent':
         return 'border-red-600 bg-red-600/20 text-red-200';
       default:
         return 'border-slate-400 bg-slate-500/10 text-slate-300';
@@ -30,11 +31,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
         return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
       case 'in progress':
       case 'in-progress':
+      case 'doing':
         return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
       case 'not started':
       case 'not-started':
+      case 'todo':
+      case 'to do':
         return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
       case 'blocked':
+      case 'blocked/waiting':
         return 'bg-red-500/20 text-red-300 border-red-500/30';
       default:
         return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
@@ -43,16 +48,30 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'No date set';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined 
+      });
+    } catch {
+      return dateString;
+    }
   };
 
   const isOverdue = (dateString: string) => {
     if (!dateString) return false;
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return false;
-    return new Date(dateString) < new Date() && task.status.toLowerCase() !== 'completed';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return date < today && task.status.toLowerCase() !== 'completed' && task.status.toLowerCase() !== 'done';
+    } catch {
+      return false;
+    }
   };
 
   return (
@@ -77,7 +96,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       <div className="flex items-center gap-2 mb-3">
         <Calendar className="w-4 h-4 text-slate-400" />
         <span className={`text-sm ${isOverdue(task.dueDate) ? 'text-red-400 font-medium' : 'text-slate-300'}`}>
-          Due {formatDate(task.dueDate)}
+          {task.dueDate ? `Due ${formatDate(task.dueDate)}` : 'No due date'}
           {isOverdue(task.dueDate) && (
             <span className="ml-2 text-xs text-red-400 font-bold">OVERDUE</span>
           )}
@@ -87,7 +106,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       {/* Owner and Notes */}
       <div className="flex flex-wrap gap-2">
         {task.owner && (
-          <span className="px-2 py-1 bg-slate-700/50 text-slate-300 text-xs rounded-md border border-slate-600/50">
+          <span className="px-2 py-1 bg-slate-700/50 text-slate-300 text-xs rounded-md border border-slate-600/50 flex items-center gap-1">
+            <User className="w-3 h-3" />
             {task.owner}
           </span>
         )}
@@ -99,6 +119,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             {task.notes}
           </span>
         )}
+      </div>
+
+      {/* Notion indicator */}
+      <div className="absolute bottom-2 right-2 opacity-30">
+        <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
+          <div className="w-2 h-2 bg-slate-800 rounded-sm"></div>
+        </div>
       </div>
     </div>
   );
